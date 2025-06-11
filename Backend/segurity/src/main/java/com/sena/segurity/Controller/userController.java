@@ -1,28 +1,17 @@
 package com.sena.segurity.Controller;
 
-
-import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.sena.segurity.DTO.userDTO;
-import com.sena.segurity.Service.userService;
-
+import org.springframework.web.bind.annotation.GetMapping;
 
 @CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500"}) // Permite solicitudes de estos orígenes
 @RestController
 @RequestMapping("api/v1/users")
 public class userController {
-
-    @Autowired
-    private userService userService;
-
     // Registrar un nuevo usuario
-    @PostMapping("/")
+    /*/@PostMapping("/")
     public ResponseEntity<Object> registerUser(@RequestBody userDTO userDTO) {
         String response = userService.save(userDTO);
         boolean isSuccessful = response.startsWith("200");
@@ -103,5 +92,10 @@ public class userController {
                 HttpStatus.INTERNAL_SERVER_ERROR
             );
         }
+    }/*/
+
+    @GetMapping("/profile/")
+    public ResponseEntity<String> getProfile(){
+        return new ResponseEntity<>("end-point privado profile", HttpStatus.OK);
     }
 }
