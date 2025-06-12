@@ -1,7 +1,7 @@
 package com.sena.segurity.DTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.sena.segurity.Model.roles;
+import com.sena.segurity.Model.user;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,12 +9,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class userDTO{
+public class recoveryRequestDTO {
     @JsonProperty("id")
-    private int userid; 
-    private String username;
-    private String password;
+    private int recovery_requestid;
     private String email;
-    private roles role;
-    private boolean enabled;
+    private String token;
+    private long expirationTime;
+    private user user;
 }

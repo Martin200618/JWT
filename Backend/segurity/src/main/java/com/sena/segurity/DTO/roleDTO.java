@@ -1,19 +1,16 @@
 package com.sena.segurity.DTO;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class roleDTO {
-    private int roleId;
-    private String nameRole;
+    @JsonProperty("id")
+    private int roleid;
+    private String name;
     private String description;
-    private LocalDateTime createRol;
-    private LocalDateTime updateRol;
 }

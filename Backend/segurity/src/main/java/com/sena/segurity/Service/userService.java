@@ -2,110 +2,126 @@ package com.sena.segurity.Service;
 
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.sena.segurity.Service.jwt.jwtServices;
+import com.sena.segurity.DTO.ResponseLogin;
+import com.sena.segurity.DTO.ResponsesDTO;
+import com.sena.segurity.DTO.requestLoginDTO;
+import com.sena.segurity.DTO.requestRegisterUserDTO;
 import com.sena.segurity.DTO.userDTO;
+import com.sena.segurity.Model.roles;
 import com.sena.segurity.Model.user;
 import com.sena.segurity.Repository.IUser;
+import lombok.RequiredArgsConstructor;
 
 @Service
-public class userService {
+@RequiredArgsConstructor
+public class userService  {
 
-    @Autowired
-    private IUser userRepository;
+    private final IUser data;
+    private final jwtServices jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
-    // Obtener todos los usuarios
     public List<user> findAll() {
-        try {
-            return userRepository.findAll();
-        } catch (Exception e) {
-            throw new RuntimeException("Error al obtener los usuarios: " + e.getMessage());
-        }
+        return data.findAll();
     }
 
-    // Obtener usuario por ID
-    public Optional<user> findById(int userId) {
-        try {
-            return userRepository.findById(userId);
-        } catch (Exception e) {
-            throw new RuntimeException("Error al obtener el usuario con ID: " + userId + ", Error: " + e.getMessage());
-        }
+    public Optional<user> findById(int id) {
+        return data.findById(id);
     }
 
-    // Registrar un usuario
-    public String save(userDTO userDTO) {
-        if (userDTO == null || !isValiduser(userDTO)) {
-            return HttpStatus.BAD_REQUEST.toString() + ": Los datos del usuario son inválidos";
-        }
-
-        try {
-            user user = convertToModel(userDTO);
-            userRepository.save(user);
-            return HttpStatus.OK.toString() + ": Usuario registrado exitosamente";
-        } catch (Exception e) {
-            return HttpStatus.INTERNAL_SERVER_ERROR.toString() + ": Error al registrar el usuario, Detalle: " + e.getMessage();
-        }
+    public Optional<user> findByUsername(String username) {
+        return data.findByUsername(username);
     }
 
-    // Actualizar un usuario
-    public String update(int userId, userDTO userDTO) {
-        Optional<user> existingUser = findById(userId);
-
-        if (!existingUser.isPresent()) {
-            return HttpStatus.NOT_FOUND.toString() + ": El usuario con ID " + userId + " no existe o ya fue eliminado";
-        }
-
-        try {
-            user userToUpdate = existingUser.get();
-            userToUpdate.setUserName(userDTO.getUserName());
-            userToUpdate.setLastName(userDTO.getLastName());
-            userToUpdate.setEmail(userDTO.getEmail());
-            userToUpdate.setPassword(userDTO.getPassword());
-            userToUpdate.getRoleId();// Se asume que el DTO tiene el rol correctamente definido
-            userToUpdate.setStatus(userDTO.isStatus());
-            userRepository.save(userToUpdate);
-            return HttpStatus.OK.toString() + ": Usuario actualizado correctamente";
-        } catch (Exception e) {
-            return HttpStatus.INTERNAL_SERVER_ERROR.toString() + ": Error al actualizar el usuario, Detalle: " + e.getMessage();
-        }
+    public Optional<user> findByEmail(String Email) {
+        return data.findByEmail(Email);
     }
 
-    // Eliminar usuario por ID
-    public String delete(int userId) {
-        Optional<user> user = findById(userId);
-
-        if (!user.isPresent()) {
-            return HttpStatus.NOT_FOUND.toString() + ": El usuario con ID " + userId + " no existe o ya fue eliminado";
+    public ResponsesDTO deleteUser(int id) {
+        Optional<user> usuario = findById(id);
+        if (!usuario.isPresent()) {
+            return new ResponsesDTO(HttpStatus.NOT_FOUND.toString(), "El usuario no existe");
         }
 
-        try {
-            userRepository.deleteById(userId);
-            return HttpStatus.OK.toString() + ": Usuario eliminado correctamente";
-        } catch (Exception e) {
-            return HttpStatus.INTERNAL_SERVER_ERROR.toString() + ": Error al eliminar el usuario, Detalle: " + e.getMessage();
+        data.deleteById(id);
+        return new ResponsesDTO(HttpStatus.OK.toString(), "Usuario eliminado correctamente");
+    }
+
+    
+
+    public ResponsesDTO save(requestRegisterUserDTO userDTO) {
+        user usuario = convertToModelRegister(userDTO);
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+        data.save(usuario);
+        return new ResponsesDTO(HttpStatus.OK.toString(), "Usuario guardado correctamente");
+    }
+
+    public ResponseLogin login(requestLoginDTO login) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        login.getUsername(),
+                        login.getPassword()));
+        UserDetails user=data.findByUsername(login.getUsername()).orElseThrow();
+        ResponseLogin response=new ResponseLogin(jwtService.getToken(user));
+        return response;
+
+    }
+
+    public ResponsesDTO updateUser(int id, userDTO userDTO) {
+        Optional<user> usuario = findById(id);
+        if (!usuario.isPresent()) {
+            return new ResponsesDTO(HttpStatus.NOT_FOUND.toString(), "El usuario no existe");
         }
+
+        user updatedUser = usuario.get();
+        updatedUser.setUsername(userDTO.getUsername());
+        updatedUser.setPassword(userDTO.getPassword());
+        updatedUser.setEmail(userDTO.getEmail());
+        updatedUser.setEnabled(userDTO.isEnabled());
+        updatedUser.setRoles(userDTO.getRole());
+
+        data.save(updatedUser);
+        return new ResponsesDTO(HttpStatus.OK.toString(), "Usuario actualizado correctamente");
     }
 
-    // Convertir DTO a modelo
-    private user convertToModel(userDTO userDTO) {
-        user user = new user();
-        user.setUserId(userDTO.getUserId());
-        user.setUserName(userDTO.getUserName());
-        user.setLastName(userDTO.getLastName());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(userDTO.getPassword());
-        user.getRoleId(); // Asumiendo que el DTO tiene el rol correctamente definido
-        user.setStatus(userDTO.isStatus());
-        return user;
+    public user convertToModelRegister(requestRegisterUserDTO usuario) {
+        roles rol = new roles();
+        // asignamos rol por defecto
+        // registrar el rol 1 como usuario estandar
+        rol.setRoleid(1);
+        return new user(
+            0, 
+            usuario.getUsername(), 
+            usuario.getPassword(), 
+            usuario.getEmail(), 
+            rol, 
+            true
+        );
     }
 
-    // Validación de datos de usuario
-    private boolean isValiduser(userDTO userDTO) {
-        return userDTO.getUserName() != null && !userDTO.getUserName().trim().isEmpty()
-                && userDTO.getEmail() != null && !userDTO.getEmail().trim().isEmpty()
-                && userDTO.getPassword() != null && !userDTO.getPassword().trim().isEmpty();
+    public user convertToModel(userDTO userDTO) {
+        roles rol =new roles();
+        //rol por defecto, recordar registrar en base datos este como rol default
+        rol.setRoleid(1);
+        return new user(
+            0, 
+            userDTO.getUsername(),
+            userDTO.getPassword(), 
+            userDTO.getEmail(), 
+            rol, 
+            userDTO.isEnabled()
+        );
     }
 }

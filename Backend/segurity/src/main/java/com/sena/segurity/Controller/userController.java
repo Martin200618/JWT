@@ -1,101 +1,56 @@
 package com.sena.segurity.Controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@CrossOrigin(origins = {"http://127.0.0.1:5500", "http://localhost:5500"}) // Permite solicitudes de estos orígenes
+import com.sena.segurity.DTO.ResponsesDTO;
+import com.sena.segurity.DTO.userDTO;
+import com.sena.segurity.Service.userService;
+
 @RestController
 @RequestMapping("api/v1/users")
 public class userController {
-    // Registrar un nuevo usuario
-    /*/@PostMapping("/")
-    public ResponseEntity<Object> registerUser(@RequestBody userDTO userDTO) {
-        String response = userService.save(userDTO);
-        boolean isSuccessful = response.startsWith("200");
+    @Autowired
+    private userService userService;
 
-        return new ResponseEntity<>(
-            Map.of(
-                "message", response,
-                "status", isSuccessful ? "success" : "error"
-            ),
-            isSuccessful ? HttpStatus.OK : HttpStatus.BAD_REQUEST
-        );
-    }
-
-    // Obtener todos los usuarios
-    @GetMapping("/")
+    @GetMapping("/") // solo administrador
     public ResponseEntity<Object> getAllUsers() {
-        try {
-            return new ResponseEntity<>(
-                userService.findAll(),
-                HttpStatus.OK
-            );
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                Map.of("message", "Error al obtener los usuarios", "error", e.getMessage()),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
+        return new ResponseEntity<>(userService.findAll(), HttpStatus.OK);
     }
 
-    // Obtener un único usuario por ID
-    @GetMapping("/get/{userId}")
-    public ResponseEntity<Object> getOneUser(@PathVariable("userId") int userId) {
-        Optional<Object> user = Optional.ofNullable(userService.findById(userId));
-        return user.map(value -> new ResponseEntity<>(
-            value,
-            HttpStatus.OK
-        )).orElseGet(() -> new ResponseEntity<>(
-            Map.of("message", "Usuario no encontrado"),
-            HttpStatus.NOT_FOUND
-        ));
+    @GetMapping("profile")
+    public ResponseEntity<Object> profile(@AuthenticationPrincipal UserDetails userDetails) {
+            
+        return new ResponseEntity<Object> (userDetails,HttpStatus.OK);
     }
 
-    // Actualizar un usuario por ID
-    @PostMapping("/update/{userId}")
-    public ResponseEntity<Object> updateUser(@PathVariable("userId") int userId, @RequestBody userDTO userDTO) {
-        try {
-            String response = userService.update(userId, userDTO);
-            return new ResponseEntity<>(
-                Map.of(
-                    "message", response,
-                    "status", response.startsWith("200") ? "success" : "error"
-                ),
-                response.startsWith("200") ? HttpStatus.OK : HttpStatus.BAD_REQUEST
-            );
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                Map.of("message", "Error al actualizar el usuario", "error", e.getMessage()),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
+    @DeleteMapping("/{id}") //solo administrador, falta desarrollar
+    public ResponseEntity<Object> deleteUser(@PathVariable int id) {
+        ResponsesDTO response = userService.deleteUser(id);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // Eliminar un usuario por ID
-    @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<Object> deleteUser(@PathVariable("userId") int userId) {
-        try {
-            String response = userService.delete(userId);
-            return new ResponseEntity<>(
-                Map.of(
-                    "message", response,
-                    "status", response.startsWith("200") ? "success" : "error"
-                ),
-                response.startsWith("200") ? HttpStatus.OK : HttpStatus.BAD_REQUEST
-            );
-        } catch (Exception e) {
-            return new ResponseEntity<>(
-                Map.of("message", "Error al eliminar el usuario", "error", e.getMessage()),
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }/*/
+    
+    // @DeleteMapping("/{id}") //usuario, falta desarrollar
+    // public ResponseEntity<Object> deleteUser(@PathVariable int id) {
+    //     ResponsesDTO response = userService.deleteUser(id);
+    //     return new ResponseEntity<>(response, HttpStatus.OK);
+    // }
 
-    @GetMapping("/profile/")
-    public ResponseEntity<String> getProfile(){
-        return new ResponseEntity<>("end-point privado profile", HttpStatus.OK);
+    @PutMapping("/updateProfileUser")//falta
+    public ResponseEntity<Object> updateUser(@PathVariable int id, @RequestBody userDTO userDTO) {
+        ResponsesDTO response = userService.updateUser(id, userDTO);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 }

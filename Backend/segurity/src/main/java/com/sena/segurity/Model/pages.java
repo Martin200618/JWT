@@ -9,19 +9,22 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity(name = "role")
+@Entity(name = "page")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class roles {
+public class pages {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "roleid")
-    private int roleid;
+    @Column(name = "pageid")
+    private int pageid;
 
     @Column(name = "name", length = 100, nullable = false)
     private String name;
 
     @Column(name = "description", length = 255, nullable = true)
     private String description;
+
+    @Column(name = "url", length = 255, nullable = false)
+    private String url;
 }

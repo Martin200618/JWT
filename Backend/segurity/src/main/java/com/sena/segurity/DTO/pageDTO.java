@@ -1,20 +1,16 @@
 package com.sena.segurity.DTO;
 
-import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class pageDTO {
-    private int pageId;
-    private String namePage;
-    private String path;
+    @JsonProperty("id")
+    private int pageid;
+    private String name;
+    private String url;
     private String description;
-    private LocalDateTime createPage;
-    private LocalDateTime updatePage;
 }
